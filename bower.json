@@ -1,0 +1,25 @@
+{
+  "name": "dc-smartfilter",
+  "main": "dc-smartfilter.js",
+  "version": "0.0.1",
+  "homepage": "https://github.com/darshit-shah/dc-smartfilter",
+  "authors": [
+    "darshit-shah <darshit@yuktianalytics.com>"
+  ],
+  "description": "wrapper library on top of dc.js which allows to use \"smartfilter api of Axiom\" instead of crossfilter",
+  "keywords": [
+    "dc",
+    "smartfilter"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "dcjs": "~1.7.4"
+  }
+}
