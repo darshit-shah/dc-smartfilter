@@ -1,7 +1,7 @@
 {
   "name": "dc-smartfilter",
   "main": "dc-smartfilter.js",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "homepage": "https://github.com/darshit-shah/dc-smartfilter",
   "authors": [
     "darshit-shah <darshit@yuktianalytics.com>"

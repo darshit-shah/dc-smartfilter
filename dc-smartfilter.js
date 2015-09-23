@@ -32,6 +32,17 @@
                 });
             };
 
+            /* Block all connected UI component */
+            _smartfilter.block = function (component) {
+                if (typeof $.blockUI == 'function') {
+                    component.block({ message: null });
+                }
+            }
+
+            /* Unblock all connected UI component */
+            _smartfilter.unblock = function (component) {
+                component.unblock();
+            }
 
             /*****************************************************************************************************************************************************************/
             /*****************************************************************************************************************************************************************/
@@ -76,10 +87,11 @@
             function _getFilters() {
                 _sf.result = {};
                 var list = dc.chartRegistry.list();
-                for (var e in list) {
-                    var chart = list[e];
-                    _sf.result[chart.chartID()] = chart.filters()
-                }
+                //for (var e in list) {
+                list.forEach(function (chart, index) {
+                    _sf.result[index] = chart.filters()
+                });
+                //}
                 return _sf.result;
             }
 
@@ -112,7 +124,7 @@
                         }
                         else {
                             //remove filter
-                            _smartfilter.filter(_sf.reference, _pivots[currentIndex].definition.dimensions[0], 'in', filters[keys[currentIndex]], function () {
+                            _smartfilter.filter(_sf.reference, _pivots[currentIndex].definition.dimensions[0].key, 'in', filters[keys[currentIndex]], function () {
                                 _checkAndApplyFilter(currentIndex + 1, filters, cb);
                             });
                         }
@@ -121,7 +133,7 @@
                     else {
                         if (_lastFilters[keys[currentIndex]] == undefined || _lastFilters[keys[currentIndex]].length == 0) {
                             //add filter
-                            _smartfilter.filter(_sf.reference, _pivots[currentIndex].definition.dimensions[0], 'in', filters[keys[currentIndex]], function () {
+                            _smartfilter.filter(_sf.reference, _pivots[currentIndex].definition.dimensions[0].key, 'in', filters[keys[currentIndex]], function () {
                                 _checkAndApplyFilter(currentIndex + 1, filters, cb);
                             });
                         }
@@ -132,7 +144,7 @@
                             }
                             else {
                                 //changed filter
-                                _smartfilter.filter(_sf.reference, _pivots[currentIndex].definition.dimensions[0], 'in', filters[keys[currentIndex]], function () {
+                                _smartfilter.filter(_sf.reference, _pivots[currentIndex].definition.dimensions[0].key, 'in', filters[keys[currentIndex]], function () {
                                     _checkAndApplyFilter(currentIndex + 1, filters, cb);
                                 });
                             }
@@ -156,11 +168,9 @@
 
             function _fetchData() {
                 if (_sf._dataChanged) {
-                    if (typeof $.blockUI == 'function') {
-                        _pivots.forEach(function (e) {
-                            e.component.block({ message: null });
-                        });
-                    }
+                    _pivots.forEach(function (e) {
+                        _smartfilter.block(e.component);
+                    });
                     _sf._dataChanged = false; // no more fetches, until a chart has had another filter applied.
                     var filters = _getFilters();
                     // ok we have the data we will send to the server....
@@ -175,21 +185,19 @@
                 console.log('_renderCharts');
                 var list = dc.chartRegistry.list();
                 for (var e in _sf.results) {
-                    for (var x in list) {
-                        if (list[x].chartID() == e) {
-                            var chart = list[x];
-                            var group = chart.group();
-                            group._currentData = _sf.results[e];
-                        }
-                    }
+                    //                    for (var x in list) {
+                    //                        if (list[x].chartID() == e) {
+                    var chart = list[e];
+                    var group = chart.group();
+                    group._currentData = _sf.results[e];
+                    //                        }
+                    //                    }
                 }
                 console.log('dc.renderAll');
                 dc.renderAll();
-                if (typeof $.blockUI == 'function') {
-                    _pivots.forEach(function (e) {
-                        e.component.unblock();
-                    });
-                }
+                _pivots.forEach(function (e) {
+                    _smartfilter.unblock(e.component);
+                });
             }
 
             _sf._fetchData = _fetchData;
@@ -231,13 +239,11 @@
                 _pivots.push(_pivot);
 
                 cbCounter = 0;
-                _smartfilter.pivot(_sf.reference, _pivots.length, dimensions, measures, updateResult);
+                _smartfilter.pivot(_sf.reference, _pivots.length - 1, dimensions, measures, updateResult);
 
-                if (typeof $.blockUI == 'function') {
-                    _pivots.forEach(function (e) {
-                        e.component.block({ message: null });
-                    });
-                }
+                _pivots.forEach(function (e) {
+                    _smartfilter.block(e.component);
+                });
 
                 return _pivot;
             }
