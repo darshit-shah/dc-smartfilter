@@ -1,0 +1,84 @@
+<html lang='en'>
+<head>
+    <meta charset='utf-8'>
+    <title>dc.js Experiment</title>
+    <script src="bower_components/jquery/dist/jquery.min.js"></script>
+    <script src="bower_components/jquery-ui/jquery-ui.min.js"></script>
+    <script src='http://localhost:4000/AxiomAPI.js' type='text/javascript'></script>
+    <script src='bower_components/d3/d3.js' type='text/javascript'></script>
+    <script src='bower_components/crossfilter/crossfilter.js' type='text/javascript'></script>
+    <script src='bower_components/dcjs/dc.js' type='text/javascript'></script>
+    <script src='bower_components/dc-smartfilter/dc-smartfilter.js' type='text/javascript'></script>
+    <script src="index.js"></script>
+    <link href='bower_components/dcjs/dc.css' rel='stylesheet' type='text/css' />
+    <style>
+        h4 span
+        {
+            font-size: 14px;
+            font-weight: normal;
+        }
+        h2
+        {
+            float: right;
+        }
+        h2 span
+        {
+            font-size: 14px;
+            font-weight: normal;
+        }
+    </style>
+</head>
+<body>
+    <div class='container' style='font: 12px sans-serif;'>
+        <div class="dc-data-count" style="float: left;">
+            <h2>
+                New Zealand Earthquakes <span><span class="filter-count"></span>selected out of <span
+                    class="total-count"></span>records | <a href="javascript:dc.filterAll();">Reset All</a>
+                </span>
+            </h2>
+        </div>
+        <div class='row'>
+            <div class='span6' id='dc-magnitude-chart'>
+                <h4>
+                    Number of Events by Magnitude <span><a class="reset" href="javascript:magnitudeChart.filterAll();dc.redrawAll();"
+                        style="display: none;">reset </a></span>
+                </h4>
+            </div>
+            <div class='span6' id='dc-depth-chart'>
+                <h4>
+                    Events by Depth (km) <span><a class="reset" href="javascript:depthChart.filterAll();dc.redrawAll();"
+                        style="display: none;">reset </a></span>
+                </h4>
+            </div>
+        </div>
+        <div class='row'>
+            <div class='span12' id='dc-time-chart'>
+                <h4>
+                    Events per hour <span><a class="reset" href="javascript:timeChart.filterAll();dc.redrawAll();"
+                        style="display: none;">reset </a></span>
+                </h4>
+            </div>
+        </div>
+        <div class='row'>
+            <div class='span4' id='dc-dayweek-chart'>
+                <h4>
+                    Day of the Week <span><a class="reset" href="javascript:dayOfWeekChart.filterAll();dc.redrawAll();"
+                        style="display: none;">reset </a></span>
+                </h4>
+                <div class="clearfix">
+                </div>
+            </div>
+            <div class='span4' id='dc-island-chart'>
+                <h4>
+                    North or South Island <span><a class="reset" href="javascript:islandChart.filterAll();dc.redrawAll();"
+                        style="display: none;">reset </a></span>
+                </h4>
+            </div>
+            <div class='span4' id='dc-table-graph'>
+                <h4>
+                    Blank 2</h4>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
