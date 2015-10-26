@@ -13,21 +13,27 @@
             var _smartfilter = {};
             /* Axiom APIs to connect to a table*/
             _smartfilter.connect = function (sfRef, viewID, callback) {
+                console.log('connect called');
                 AxiomAPIs.smartFilter({ action: "connect", reference: sfRef, viewID: viewID }, function (data) {
+                    console.log('connect callback ', data);
                     callback(data);
                 });
             };
 
             /* Axiom APIs to create a pivot*/
             _smartfilter.pivot = function (sfRef, pivotRef, dimensions, measures, callback) {
+                console.log('Pivot called');
                 AxiomAPIs.smartFilter({ action: "pivot", reference: sfRef, data: { reference: pivotRef, dimensions: dimensions, measures: measures} }, function (pivotData) {
+                    console.log('pivot callback ', pivotData);
                     callback(pivotRef, pivotData);
                 });
             };
 
             /* Axiom APIs to create a filter*/
             _smartfilter.filter = function (sfRef, field, filterType, filters, callback) {
+                console.log('filter called ',field,filters);
                 AxiomAPIs.smartFilter({ action: "filter", reference: sfRef, data: { field: field, filters: filters, filterType: filterType} }, function () {
+                    console.log('filter callback ');
                     callback();
                 });
             };
@@ -77,11 +83,15 @@
             }
             _sf._dataChanged = true;
 
+            var filterTimer=0;
             function _filterChanged() {
                 _sf._dataChanged = true;
-                cbCounter = -1000000;
-                console.log('filter changed ', new Date().getTime());
-                _fetchData();
+                clearTimeout(filterTimer)
+                filterTimer = setTimeout(function(){
+                    cbCounter = -1000000;
+                    console.log('filter changed ', new Date().getTime());
+                    _fetchData();
+                },500);
             }
 
             function _getFilters() {
@@ -89,7 +99,19 @@
                 var list = dc.chartRegistry.list();
                 //for (var e in list) {
                 list.forEach(function (chart, index) {
-                    _sf.result[index] = chart.filters()
+                    if(_pivots[index].filterType.toLowerCase()=='range'){
+                        if(chart.filters().length==0){
+                            _sf.result[index] = {filterType:_pivots[index].filterType, values:chart.filters()}
+                        }
+                        else
+                        {
+                            _sf.result[index] = {filterType:_pivots[index].filterType, values:chart.filters()[0]}   
+                        }
+                    }
+                    else
+                    {
+                        _sf.result[index] = {filterType:_pivots[index].filterType, values:chart.filters()}   
+                    }
                 });
                 //}
                 return _sf.result;
@@ -118,33 +140,33 @@
                 else {
                     //no filter in this key
                     if (filters[keys[currentIndex]].length == 0) {
-                        if (_lastFilters[keys[currentIndex]] == undefined || _lastFilters[keys[currentIndex]].length == 0) {
+                        if (_lastFilters[keys[currentIndex]]==undefined || _lastFilters[keys[currentIndex]].values == undefined || _lastFilters[keys[currentIndex]].values.length == 0) {
                             //do nothing.
                             _checkAndApplyFilter(currentIndex + 1, filters, cb);
                         }
                         else {
                             //remove filter
-                            _smartfilter.filter(_sf.reference, _pivots[currentIndex].definition.dimensions[0].key, 'in', filters[keys[currentIndex]], function () {
+                            _smartfilter.filter(_sf.reference, _pivots[currentIndex].definition.dimensions[0].key,filters[keys[currentIndex]].filterType , filters[keys[currentIndex]].values, function () {
                                 _checkAndApplyFilter(currentIndex + 1, filters, cb);
                             });
                         }
                     }
                     //some filter is there in this key
                     else {
-                        if (_lastFilters[keys[currentIndex]] == undefined || _lastFilters[keys[currentIndex]].length == 0) {
+                        if (_lastFilters[keys[currentIndex]]==undefined || _lastFilters[keys[currentIndex]].values == undefined || _lastFilters[keys[currentIndex]].values.length == 0) {
                             //add filter
-                            _smartfilter.filter(_sf.reference, _pivots[currentIndex].definition.dimensions[0].key, 'in', filters[keys[currentIndex]], function () {
+                            _smartfilter.filter(_sf.reference, _pivots[currentIndex].definition.dimensions[0].key, filters[keys[currentIndex]].filterType, filters[keys[currentIndex]].values, function () {
                                 _checkAndApplyFilter(currentIndex + 1, filters, cb);
                             });
                         }
                         else {
-                            if (filters[keys[currentIndex]].join(",") == _lastFilters[keys[currentIndex]].join(",")) {
+                            if (filters[keys[currentIndex]].values.join(",") == _lastFilters[keys[currentIndex]].values.join(",")) {
                                 //do nothing
                                 _checkAndApplyFilter(currentIndex + 1, filters, cb);
                             }
                             else {
                                 //changed filter
-                                _smartfilter.filter(_sf.reference, _pivots[currentIndex].definition.dimensions[0].key, 'in', filters[keys[currentIndex]], function () {
+                                _smartfilter.filter(_sf.reference, _pivots[currentIndex].definition.dimensions[0].key,  filters[keys[currentIndex]].filterType, filters[keys[currentIndex]].values, function () {
                                     _checkAndApplyFilter(currentIndex + 1, filters, cb);
                                 });
                             }
@@ -158,6 +180,16 @@
                     console.error(data);
                 }
                 else {
+                    if(_pivots[chartId].convert!=""){
+                        if(_pivots[chartId].convert.toLowerCase() == "date"){
+                            data.data.forEach(function(d){
+                                d.key = new Date(d.key);
+                            })       
+                        }
+                        data.data = data.data.sort(function(a,b){
+                            return b.key.getTime()-a.key.getTime();
+                        })
+                    }
                     _sf.results[chartId] = data.data;
                 }
                 cbCounter++;
@@ -205,7 +237,7 @@
             _sf._getFilters = _getFilters;
 
             var _pivots = [];
-            _sf.addPivot = function (dimensions, measures, selector) {
+            _sf.addPivot = function (dimensions, measures, selector, filterType, convert) {
                 if (dimensions.length == 0 && measures.length == 0) {
                     console.error("Please provide dimension or measure");
                     return;
@@ -219,6 +251,9 @@
                 _pivot.dimension.filterRange = _filterChanged;
                 _pivot.dimension.filterFunction = _filterChanged;
                 _pivot.dimension.filterAll = _filterChanged;
+                _pivot.filterType=filterType;
+                _pivot.convert=convert;
+
                 _pivot.group = function () {
                     return {
                         _currentData: [],
