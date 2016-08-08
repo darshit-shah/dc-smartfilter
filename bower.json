@@ -20,6 +20,7 @@
     "tests"
   ],
   "dependencies": {
-    "dcjs": "~1.7.4"
+    "dcjs": "1.7.4",
+    "jqueryui": "1.13.0"
   }
 }
