@@ -11,16 +11,16 @@ function index() {
   var dc_config = {
     apiHost: location.protocol + "//" + location.host,
     configuration: {
-      "tableName": "NewZealand_Earthquakes239",
+      "tableName": "NewZealand_Earthquakes_Data",
       "dbConfig": {
         "type": "database",
         "engine": "infinidb",
         "databaseType": "mysql",
-        "database": "axiomdemo",
-        "host": "54.254.209.219",
-        "port": "3307",
-        "user": "usr",
-        "password": "usr",
+        "database": "my_database",
+        "host": "a.b.c.d",
+        "port": "3306",
+        "user": "my_user",
+        "password": "my_password",
         "cacheResponse": false
       }
     }
