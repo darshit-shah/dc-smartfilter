@@ -17,17 +17,27 @@
       _smartfilter.connect = function(apiHost, configuration, callback) {
         _smartfilter.apiHost = apiHost;
         console.log('connect called');
-        SF.connect(apiHost, configuration, function(data) {
-          console.log('connect callback ', data);
-          callback(data);
-        });
+        var sfRefs = Object.keys(_sf.config.groupReference);
+        var refCounter=0;
+        sfRefs.forEach(function(singleRef){
+        	refCounter++;
+	        SF.connect(apiHost, configuration, function(data) {
+	          console.log('connect callback ', data);
+	          _sf.config.groupReference[singleRef] = data.content.result.reference;
+	          //callback(data);
+	          refCounter--;
+	          if(refCounter === 0){
+	          	callback(data);
+	          }
+	        });
+	      });
       };
 
       /* Axiom APIs to create a pivot*/
       _smartfilter.pivot = function(sfRef, pivotRef, dimensions, measures, callback) {
         console.log('Pivot called');
         // AxiomAPIs.smartFilter({ action: "pivot", reference: sfRef, data: { reference: pivotRef, dimensions: dimensions, measures: measures } }, function(pivotData) {
-        SF.pivot(_smartfilter.apiHost, { reference: sfRef, data: { reference: pivotRef, dimensions: dimensions, measures: measures } }, function(pivotData) {
+        SF.pivot(_smartfilter.apiHost, { reference: _sf.config.groupReference[sfRef], data: { reference: pivotRef, dimensions: dimensions, measures: measures } }, function(pivotData) {
           console.log('pivot callback ', pivotData);
           callback(pivotRef, pivotData);
         });
@@ -37,10 +47,18 @@
       _smartfilter.filter = function(sfRef, field, filterType, filters, callback) {
         console.log('filter called ', field, filters);
         // AxiomAPIs.smartFilter({ action: "filter", reference: sfRef, data: { field: field, filters: filters, filterType: filterType } }, function() {
-        SF.filter(_smartfilter.apiHost, { reference: sfRef, data: { field: field, filters: filters, filterType: filterType } }, function() {
-          console.log('filter callback ');
-          callback();
-        });
+        var sfRefs = Object.keys(_sf.config.groupReference);
+        var refCounter=0;
+        sfRefs.forEach(function(singleRef){
+        	refCounter++;
+	      	SF.filter(_smartfilter.apiHost, { reference: sfRef, data: { field: field, filters: filters, filterType: filterType } }, function() {
+	          console.log('filter callback ');
+	          refCounter--;
+	          if(refCounter === 0){
+	          	callback();
+	          }
+	        });
+	      });
       };
 
       /* Block all connected UI component */
@@ -70,6 +88,10 @@
         // _sf.reference = arguments[0];
         _sf.config = arguments[0];
         _sf.connectCallback = arguments[1];
+        if(_sf.config.groupReference === null) {
+        	_sf.config.groupReference={};
+        }
+        _sf.config.groupReference.defaultReference=null;
         _smartfilter.connect(_sf.config.apiHost, _sf.config.configuration, function(data) {
           if (data.status == false) {
             console.error(data);
@@ -77,7 +99,8 @@
             if (data.content.result.type == 'errorMessage') {
               console.error(data.content.result.data);
             } else {
-              _sf.reference = data.content.result.reference;
+              //_sf.reference = data.content.result.reference;
+              //_sf.config.groupReference.defaultReference = data.content.result.reference;
               _sf.connectCallback(data);
             }
           }
@@ -235,7 +258,7 @@
       _sf._getFilters = _getFilters;
 
       var _pivots = [];
-      _sf.addPivot = function(dimensions, measures, selector, filterType, convert) {
+      _sf.addPivot = function(dimensions, measures, selector, filterType, convert, sfReference) {
         if (dimensions.length == 0 && measures.length == 0) {
           console.error("Please provide dimension or measure");
           return;
@@ -272,7 +295,7 @@
         _pivots.push(_pivot);
 
         cbCounter = 0;
-        _smartfilter.pivot(_sf.reference, _pivots.length - 1, dimensions, measures, updateResult);
+        _smartfilter.pivot(sfReference || 'defaultReference', _pivots.length - 1, dimensions, measures, updateResult);
 
         _pivots.forEach(function(e) {
           _smartfilter.block(e.component);

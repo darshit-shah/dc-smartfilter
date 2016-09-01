@@ -1,14 +1,20 @@
 "use strict";
+var magnitudeChart = null;
+var depthChart = null;
+var timeChart = null;
+var dayOfWeekChart = null;
+var islandChart = null;
 
 function index() {
   //var dataTable = dc.dataTable("#dc-table-graph");
-  var magnitudeChart = dc.barChart("#dc-magnitude-chart");
-  var depthChart = dc.barChart("#dc-depth-chart");
-  var timeChart = dc.lineChart("#dc-time-chart");
-  var dayOfWeekChart = dc.rowChart("#dc-dayweek-chart");
-  var islandChart = dc.pieChart("#dc-island-chart");
+  magnitudeChart = dc.barChart("#dc-magnitude-chart");
+  depthChart = dc.barChart("#dc-depth-chart");
+  timeChart = dc.lineChart("#dc-time-chart");
+  dayOfWeekChart = dc.rowChart("#dc-dayweek-chart");
+  islandChart = dc.pieChart("#dc-island-chart");
 
   var dc_config = {
+  	groupReference:{G1:null, G2:null, G3:null},
     apiHost: location.protocol + "//" + location.host,
     configuration: {
       "tableName": "NewZealand_Earthquakes_Data",
@@ -28,11 +34,11 @@ function index() {
 
 
   var dc_sfObj = dc_sf(dc_config, function(data) {
-    var pivot1 = dc_sfObj.addPivot([{ key: "mag", alias: 'key', encloseField: false }], [{ key: 'FID', aggregation: 'count', alias: 'value', encloseField: false }], "#dc-magnitude-chart", "range", "");
-    var pivot2 = dc_sfObj.addPivot([{ key: "depth", alias: 'key', encloseField: false }], [{ key: 'FID', aggregation: 'count', alias: 'value', encloseField: false }], "#dc-depth-chart", "range", "");
-    var pivot3 = dc_sfObj.addPivot([{ key: "cast(date_format(dtg1,'%Y-%m-%d %H:00:00') as datetime)", alias: 'key', encloseField: false }], [{ key: 'FID', aggregation: 'count', alias: 'value', encloseField: false }], "#dc-time-chart", "range", "date");
-    var pivot4 = dc_sfObj.addPivot([{ key: "cast(date_format(dtg1,'%w.%a') as char)", alias: 'key', encloseField: false }], [{ key: 'FID', aggregation: 'count', alias: 'value', encloseField: false }], "#dc-dayweek-chart", "in", "");
-    var pivot5 = dc_sfObj.addPivot([{ key: "(CASE WHEN lat <= -40.555907 && long1 <= 174.590607 THEN 'South' ELSE 'North' END)", alias: 'key', encloseField: false }], [{ key: 'FID', aggregation: 'count', alias: 'value', encloseField: false }], "#dc-island-chart", "in", "");
+    var pivot1 = dc_sfObj.addPivot([{ key: "mag", alias: 'key', encloseField: false }], [{ key: 'FID', aggregation: 'count', alias: 'value', encloseField: false }], "#dc-magnitude-chart", "range", "", "G1");
+    var pivot2 = dc_sfObj.addPivot([{ key: "depth", alias: 'key', encloseField: false }], [{ key: 'FID', aggregation: 'count', alias: 'value', encloseField: false }], "#dc-depth-chart", "range", "","G2");
+    var pivot3 = dc_sfObj.addPivot([{ key: "cast(date_format(dtg1,'%Y-%m-%d %H:00:00') as datetime)", alias: 'key', encloseField: false }], [{ key: 'FID', aggregation: 'count', alias: 'value', encloseField: false }], "#dc-time-chart", "range", "date","G3");
+    var pivot4 = dc_sfObj.addPivot([{ key: "cast(date_format(dtg1,'%w.%a') as char)", alias: 'key', encloseField: false }], [{ key: 'FID', aggregation: 'count', alias: 'value', encloseField: false }], "#dc-dayweek-chart", "in", "","G1");
+    var pivot5 = dc_sfObj.addPivot([{ key: "(CASE WHEN lat <= -40.555907 && long1 <= 174.590607 THEN 'South' ELSE 'North' END)", alias: 'key', encloseField: false }], [{ key: 'FID', aggregation: 'count', alias: 'value', encloseField: false }], "#dc-island-chart", "in", "","G2");
 
     magnitudeChart.width(480)
       .height(150)
