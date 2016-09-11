@@ -16,13 +16,13 @@
       /* Axiom APIs to connect to a table*/
       _smartfilter.connect = function(apiHost, configuration, callback) {
         _smartfilter.apiHost = apiHost;
-        console.log('connect called');
+        //console.log('connect called');
         var sfRefs = Object.keys(_sf.config.groupReference);
         var refCounter=0;
         sfRefs.forEach(function(singleRef){
         	refCounter++;
 	        SF.connect(apiHost, configuration, function(data) {
-	          console.log('connect callback ', data);
+	          //console.log('connect callback ', data);
 	          _sf.config.groupReference[singleRef] = data.content.result.reference;
 	          //callback(data);
 	          refCounter--;
@@ -35,26 +35,27 @@
 
       /* Axiom APIs to create a pivot*/
       _smartfilter.pivot = function(sfRef, pivotRef, dimensions, measures, callback) {
-        console.log('Pivot called');
+        //console.log('Pivot called');
         // AxiomAPIs.smartFilter({ action: "pivot", reference: sfRef, data: { reference: pivotRef, dimensions: dimensions, measures: measures } }, function(pivotData) {
         SF.pivot(_smartfilter.apiHost, { reference: _sf.config.groupReference[sfRef], data: { reference: pivotRef, dimensions: dimensions, measures: measures } }, function(pivotData) {
-          console.log('pivot callback ', pivotData);
+          //console.log('pivot callback ', pivotData);
           callback(pivotRef, pivotData);
         });
       };
 
       /* Axiom APIs to create a filter*/
       _smartfilter.filter = function(sfRef, field, filterType, filters, callback) {
-        console.log('filter called ', field, filters);
+        //console.log('filter called ', field, filters);
         // AxiomAPIs.smartFilter({ action: "filter", reference: sfRef, data: { field: field, filters: filters, filterType: filterType } }, function() {
         var sfRefs = Object.keys(_sf.config.groupReference);
+        console.log('sfRefs',sfRefs);
         var refCounter=0;
         sfRefs.forEach(function(singleRef){
-        	refCounter++;
-	      	SF.filter(_smartfilter.apiHost, { reference: sfRef, data: { field: field, filters: filters, filterType: filterType } }, function() {
-	          console.log('filter callback ');
-	          refCounter--;
-	          if(refCounter === 0){
+        	//console.log('apply filter',{ reference: _sf.config.groupReference[singleRef], data: { field: field, filters: filters, filterType: filterType } });
+	      	SF.filter(_smartfilter.apiHost, { reference: _sf.config.groupReference[singleRef], data: { field: field, filters: filters, filterType: filterType } }, function() {
+	          //console.log('filter callback ');
+	          refCounter++;
+	          if(refCounter === sfRefs.length){
 	          	callback();
 	          }
 	        });
@@ -118,7 +119,7 @@
         clearTimeout(filterTimer)
         filterTimer = setTimeout(function() {
           cbCounter = -1000000;
-          console.log('filter changed ', new Date().getTime());
+          //console.log('filter changed ', new Date().getTime());
           _fetchData();
         }, 500);
       }
@@ -161,15 +162,17 @@
         if (currentIndex >= keys.length) {
           //done
           _lastFilters = $.extend(true, {}, filters);
+          console.log('_lastFilters', _lastFilters);
           cb();
         } else {
           //no filter in this key
-          if (filters[keys[currentIndex]].length == 0) {
+          if (filters[keys[currentIndex]].values.length == 0) {
             if (_lastFilters[keys[currentIndex]] == undefined || _lastFilters[keys[currentIndex]].values == undefined || _lastFilters[keys[currentIndex]].values.length == 0) {
               //do nothing.
               _checkAndApplyFilter(currentIndex + 1, filters, cb);
             } else {
               //remove filter
+              console.log('remove filter',filters[keys[currentIndex]].values,_lastFilters[keys[currentIndex]].values);
               _smartfilter.filter(_sf.reference, _pivots[currentIndex].definition.dimensions[0].key, filters[keys[currentIndex]].filterType, filters[keys[currentIndex]].values, function() {
                 _checkAndApplyFilter(currentIndex + 1, filters, cb);
               });
@@ -178,6 +181,7 @@
           //some filter is there in this key
           else {
             if (_lastFilters[keys[currentIndex]] == undefined || _lastFilters[keys[currentIndex]].values == undefined || _lastFilters[keys[currentIndex]].values.length == 0) {
+            	console.log('added filter',filters[keys[currentIndex]].values);
               //add filter
               _smartfilter.filter(_sf.reference, _pivots[currentIndex].definition.dimensions[0].key, filters[keys[currentIndex]].filterType, filters[keys[currentIndex]].values, function() {
                 _checkAndApplyFilter(currentIndex + 1, filters, cb);
@@ -188,6 +192,7 @@
                 _checkAndApplyFilter(currentIndex + 1, filters, cb);
               } else {
                 //changed filter
+                console.log('changed filter',filters[keys[currentIndex]].values,_lastFilters[keys[currentIndex]].values);
                 _smartfilter.filter(_sf.reference, _pivots[currentIndex].definition.dimensions[0].key, filters[keys[currentIndex]].filterType, filters[keys[currentIndex]].values, function() {
                   _checkAndApplyFilter(currentIndex + 1, filters, cb);
                 });
